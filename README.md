@@ -160,7 +160,8 @@ Mais popular: Silas com 4 amigo(s).
 ├── Main.java          # versão de terminal (menu)
 ├── Janela.java        # versão gráfica (Swing)
 ├── RedeSocial.java    # grafo (lista de adjacência), algoritmos e dados de exemplo
-├── ROTEIRO.md         # roteiro de apresentação: o que clicar e o que falar
+├── APRESENTACAO.md    # slides para exibir durante a apresentação (código explicado)
+├── ROTEIRO.md         # roteiro de estudo: o que clicar, o que falar e perguntas prováveis
 └── README.md
 ```
 
