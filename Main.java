@@ -3,10 +3,9 @@ import java.util.*;
 public class Main {
 
     private static final Scanner in = new Scanner(System.in);
-    private static final RedeSocial rede = new RedeSocial();
+    private static final RedeSocial rede = RedeSocial.exemplo();
 
     public static void main(String[] args) {
-        carregarDados();
         int op;
         do {
             menu();
@@ -36,7 +35,7 @@ public class Main {
             case 1 -> System.out.println(rede.addPessoa(ler("Nome: ")) ? "Pessoa cadastrada." : "Nome vazio ou já cadastrado.");
             case 2 -> {
                 String p = pessoa("Pessoa: ");
-                if (p != null) System.out.println(rede.removePessoa(p) ? p + " foi removida." : "");
+                if (p != null && rede.removePessoa(p)) System.out.println(p + " foi removida.");
             }
             case 3 -> {
                 String[] d = dupla();
@@ -129,24 +128,5 @@ public class Main {
 
     private static String grau(int n) {
         return n + (n == 1 ? " grau" : " graus");
-    }
-
-    // ---------- dados iniciais: dois grupos sem ligação entre si ----------
-
-    private static void carregarDados() {
-        String[][] amizades = {
-                // grupo A
-                {"Felipe", "Gabriel Xavier"}, {"Felipe", "Silas"}, {"Felipe", "Helder"},
-                {"Gabriel Xavier", "Silas"}, {"Silas", "Helder"}, {"Silas", "Ismael"},
-                {"Ismael", "Benks"}, {"Benks", "Joao Paulo"},
-                // grupo B
-                {"Leonam", "Fabricio"}, {"Leonam", "Gabriel Siqueira"}, {"Fabricio", "Gabriel Siqueira"},
-                {"Gabriel Siqueira", "Wilson"}, {"Wilson", "Wallace"}
-        };
-        for (String[] a : amizades) {
-            rede.addPessoa(a[0]);
-            rede.addPessoa(a[1]);
-            rede.addAmizade(a[0], a[1]);
-        }
     }
 }
