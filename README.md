@@ -10,10 +10,50 @@ Requer Java 17 ou superior.
 
 ```bash
 javac -encoding UTF-8 *.java
-java Main
+java Janela    # interface gráfica
+java Main      # versão de terminal (menu)
 ```
 
 > No terminal do Windows, se os acentos aparecerem quebrados, rode `chcp 65001` antes de executar.
+
+### Interface gráfica (`Janela`)
+
+Feita com Swing, que já vem no JDK (nenhuma biblioteca externa). O grafo é desenhado na tela com layout automático: as pessoas se repelem e os amigos se atraem.
+
+- **Clique numa pessoa:** destaca os amigos e mostra as sugestões de amizade (linhas tracejadas).
+- **Clique em uma segunda pessoa:** destaca o menor caminho (BFS) em dourado e mostra os graus de separação.
+- **Arraste** as bolinhas para reorganizar. O tamanho de cada uma é o grau (número de amigos), que também aparece dentro dela.
+- **Cores:** cada grupo isolado (componente conexo) tem uma cor. Remover o Silas faz o grupo A se dividir em dois, e dá para ver a mudança na hora.
+- O painel lateral tem adicionar e remover pessoas, conectar e desconectar amigos, e as consultas (mais popular, círculos sociais, grupos isolados, lista e matriz).
+
+#### Colorir por centralidade
+
+Na aba Explorar, o cartão **Colorir por** muda o que a cor das bolinhas representa. Cor fria é o menor valor e cor quente é o maior, com uma barra de legenda embaixo e o ranking no painel de resultado:
+
+| Modo | O que mede | Como é calculado |
+|---|---|---|
+| **Grupos** | Quem se alcança por amizades | DFS (componentes conexos) |
+| **Grau** | Número de amigos | Tamanho do conjunto de adjacência |
+| **Proximidade** | Quão perto a pessoa está de todas as que alcança | Uma BFS por pessoa, O(V·(V+E)) |
+| **Intermediação** | Em quantos menores caminhos entre outras pessoas ela aparece (ponte da rede) | Algoritmo de Brandes, uma BFS por pessoa, O(V·(V+E)) |
+
+No exemplo, o Silas lidera a intermediação (9,5), seguido do Ismael (8,0), que tem só 2 amigos: o que importa é ligar partes da rede, não ter muitos amigos. Ao clicar numa pessoa, a proximidade e a intermediação dela também aparecem no painel.
+
+#### Aba "Algoritmos": o algoritmo passo a passo
+
+Mostra **como** cada algoritmo pensa, não só o resultado. Escolha o algoritmo, clique numa pessoa para ser o início (BFS e DFS) e use Play, voltar ou próximo passo:
+
+| Algoritmo | Estrutura | O que se vê |
+|---|---|---|
+| **BFS** | Fila (FIFO) | O grafo se pinta em camadas. A fila aparece desenhada embaixo, e o número dentro de cada bolinha é a distância até o início. |
+| **DFS** | Pilha (LIFO) | O algoritmo mergulha por um caminho e volta (backtracking). A pilha mostra o caminho atual, e o número é a ordem de visita. |
+| **Articulação** | DFS a cada teste | A cada pessoa "tirada" da rede, os grupos que sobram ficam coloridos. Quem faz o número de grupos aumentar ganha um anel vermelho. |
+
+Em todos há um cartão com a estrutura usada e a complexidade, o **pseudocódigo com a linha em execução destacada** e uma frase explicando cada passo. As cores e anéis têm legenda embaixo do grafo.
+
+Quem gera os passos é a `RedeSocial` (`passosBfs`, `passosDfs`, `passosArticulacao`), que devolve uma lista de "fotografias" do algoritmo. A janela só reproduz essa lista, então a lógica dos algoritmos continua toda em um lugar.
+
+**Pontos de articulação:** o programa testa uma pessoa por vez (tira, recalcula os grupos e compara), o que custa O(V·(V+E)). O algoritmo de Tarjan faz o mesmo numa única DFS, em O(V+E). Fica como ideia de melhoria.
 
 ## Modelagem
 
@@ -75,6 +115,8 @@ Numa rede social cada pessoa conhece só uma pequena parte do total, então a li
 | 10 | Grupos isolados | **DFS** (componentes conexos) | O(V + E) |
 | 11 | Mais popular | Maior grau (lista todos em caso de empate) | O(V) |
 | 12 | Lista e matriz de adjacência | Percorre o grafo | O(V²) |
+| (janela) | Pontos de articulação | Tira cada pessoa e recontagem de grupos | O(V·(V+E)) |
+| (janela) | Proximidade e intermediação | Uma BFS por pessoa (Brandes para a intermediação) | O(V·(V+E)) |
 
 Os nomes são normalizados na entrada: `joao  paulo` e `Joao Paulo` são a mesma pessoa.
 
@@ -115,14 +157,16 @@ Mais popular: Silas com 4 amigo(s).
 
 ```
 .
-├── Main.java          # menu, leitura de dados e dados iniciais
-├── RedeSocial.java    # grafo (lista de adjacência) e algoritmos
+├── Main.java          # versão de terminal (menu)
+├── Janela.java        # versão gráfica (Swing)
+├── RedeSocial.java    # grafo (lista de adjacência), algoritmos e dados de exemplo
+├── ROTEIRO.md         # roteiro de apresentação: o que clicar e o que falar
 └── README.md
 ```
 
-`RedeSocial` não imprime nada: só guarda o grafo e devolve resultados. Toda a interação com o usuário fica em `Main`.
+`RedeSocial` não imprime nada: só guarda o grafo e devolve resultados. Toda a interação com o usuário fica em `Main` e `Janela`, que usam exatamente a mesma classe.
 
 ## Autores
 
-- [Nome 1]
-- [Nome 2]
+- Leonam Miranda de Oliveira
+- Gabriel Figueira Siqueira
