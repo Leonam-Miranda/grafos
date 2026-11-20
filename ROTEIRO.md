@@ -363,7 +363,7 @@ lista.sort(Map.Entry.<String, Integer>comparingByValue().reversed() // mais amig
 - São **dois laços encaixados**: os amigos dos meus amigos.
 - `contagem.merge(candidato, 1, Integer::sum)` é o jeito de **contar** com um `Map`: se o candidato ainda não está no mapa, põe 1; se já está, soma 1. No fim, o número é quantos amigos em comum.
 - Depois só **ordena**: do maior para o menor número de amigos em comum e, em caso de empate, por nome.
-- **Custo:** proporcional à soma dos graus dos amigos. Não precisa olhar a rede inteira.
+- **Custo:** O(S · log grau + k · log k), em que S é a soma dos graus dos amigos e k é o número de sugestões. O log grau vem do `contains` no `TreeSet` dos meus amigos, e o k · log k vem da ordenação no fim. Não precisa olhar a rede inteira.
 
 #### Menor caminho: a BFS (linhas 103 a 122)
 
@@ -831,7 +831,9 @@ A BFS descobre as pessoas em **ordem de distância**: todas a 1 amizade, depois 
 Aí a BFS deixa de servir, porque ela conta **número de amizades**, não **peso**. Nesse caso se usa o **algoritmo de Dijkstra**, que troca a fila comum por uma **fila de prioridade** (sempre processa quem está mais perto, pelo peso). Com todos os pesos iguais a 1, o Dijkstra dá o mesmo resultado da BFS. Não implementamos porque o nosso grafo é **não ponderado**.
 
 **Qual a complexidade dos algoritmos?** *(Gabriel)*
-- **BFS e DFS:** O(V + E), cada pessoa e cada amizade são vistas uma vez.
+- **BFS e DFS:** O(V + E), cada pessoa e cada amizade são vistas uma vez. Isso conta como O(1) achar cada pessoa no `TreeMap`, como nos livros. Na verdade cada busca custa O(log V), o que dá O(V log V + E).
+- **`grupos()` e `circulos()`:** somam O(V log V) para devolver os resultados em ordem alfabética (cada grupo é um `TreeSet`, e cada nível dos círculos é ordenado).
+- **Sugestões:** O(S · log grau + k · log k), em que S é a soma dos graus dos amigos e k é o número de sugestões.
 - **Proximidade e intermediação:** O(V·(V + E)), uma BFS por pessoa.
 - **Pontos de articulação** do jeito que fizemos (tirar cada pessoa e recontar os grupos): O(V·(V + E)).
 
@@ -845,7 +847,7 @@ Ponto de articulação é **sim ou não**: se a pessoa sair, o grupo se parte? I
 É um **componente conexo**: um conjunto de pessoas em que todas se alcançam por amizades, e que não tem nenhuma ligação com o resto. A DFS (ou a BFS) a partir de uma pessoa percorre exatamente o componente dela.
 
 **Como funciona a sugestão de amigos?** *(Leonam)*
-Para cada amigo da pessoa, olhamos os amigos dele que ela ainda **não conhece** e contamos quantas vezes cada candidato aparece. Quem aparece mais tem **mais amigos em comum** e vem primeiro. O custo é a soma dos graus dos amigos.
+Para cada amigo da pessoa, olhamos os amigos dele que ela ainda **não conhece** e contamos quantas vezes cada candidato aparece. Quem aparece mais tem **mais amigos em comum** e vem primeiro. O custo é proporcional à soma dos graus dos amigos, com um fator log grau por causa do `contains` no `TreeSet`, mais a ordenação das sugestões no fim. Não precisa olhar a rede inteira.
 
 **Por que lista de adjacência e não matriz?** *(Leonam)*
 Redes sociais são **esparsas**: cada pessoa conhece poucas entre muitas. A lista gasta O(V + E); a matriz gasta O(V²), quase tudo zero (no exemplo, 26 uns em 144 casas). A matriz só ganha para perguntar "A e B são amigos?" em O(1).

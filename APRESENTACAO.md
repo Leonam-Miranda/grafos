@@ -364,13 +364,14 @@ atualizarSelecao(p + " foi removida." + efeitoGrupos(antes));
 
 | Operação | Custo |
 |---|---|
-| BFS (`caminho`), DFS (`grupos`) | **O(V + E)** \* |
-| `sugestoes` | O(soma dos graus dos amigos) |
+| BFS (`caminho`) | **O(V + E)** \* |
+| DFS (`grupos`) | **O(V + E)** \* + O(V log V) para devolver cada grupo em ordem (`TreeSet`) |
+| `sugestoes` | O(S · log grau + k · log k): S = soma dos graus dos amigos, k = nº de sugestões |
 | Proximidade, intermediação | O(V·(V + E)): uma BFS por pessoa |
 | Pontos de articulação (nosso jeito) | O(V·(V + E)): uma DFS por pessoa |
 | Pontos de articulação (**Tarjan**) | **O(V + E)**: uma única DFS |
 
-\* Com `TreeMap` há um fator `log V` ao buscar cada pessoa. Com `HashMap` seria o O(V + E) "puro".
+\* Contando como O(1) achar cada pessoa no `TreeMap`, como nos livros. Na verdade cada busca custa O(log V), o que dá O(V log V + E). Com `HashMap` a busca seria O(1) em média.
 
 Escolhemos o teste de "tirar e contar" porque é **mais fácil de explicar e de animar**.
 

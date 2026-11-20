@@ -1,6 +1,11 @@
 # Rede Social de Amizades
 
-Programa de terminal em Java que modela uma rede de amizades como um **grafo**. Dá para cadastrar pessoas e amizades e fazer consultas sobre a rede: amigos em comum, sugestões, graus de separação, círculos sociais e grupos isolados.
+Programa em Java que modela uma rede de amizades como um **grafo**. Dá para cadastrar pessoas e amizades e fazer consultas sobre a rede: amigos em comum, sugestões, graus de separação, círculos sociais, grupos isolados, pessoas mais centrais e pontos de articulação.
+
+Há duas formas de usar, que compartilham a mesma lógica de grafos (`RedeSocial`):
+
+- **Interface gráfica** (`Janela`): o grafo desenhado na tela, com consultas por clique e os algoritmos animados passo a passo.
+- **Versão de terminal** (`Main`): um menu numerado com as mesmas operações básicas.
 
 Projeto da disciplina de Estrutura de Dados.
 
@@ -16,19 +21,47 @@ java Main      # versão de terminal (menu)
 
 > No terminal do Windows, se os acentos aparecerem quebrados, rode `chcp 65001` antes de executar.
 
-### Interface gráfica (`Janela`)
+O `Main` também aceita a entrada redirecionada de um arquivo, o que é útil para testar uma sequência de comandos (o fim do arquivo encerra o programa):
 
-Feita com Swing, que já vem no JDK (nenhuma biblioteca externa). O grafo é desenhado na tela com layout automático: as pessoas se repelem e os amigos se atraem.
+```bash
+java Main < entrada.txt
+```
 
-- **Clique numa pessoa:** destaca os amigos e mostra as sugestões de amizade (linhas tracejadas).
-- **Clique em uma segunda pessoa:** destaca o menor caminho (BFS) em dourado e mostra os graus de separação.
+**Os dados não são salvos.** A rede fica só na memória: toda execução começa com a rede de exemplo (12 pessoas em 2 grupos), e o que for adicionado ou removido se perde ao fechar o programa.
+
+## Interface gráfica (`Janela`)
+
+Feita com Swing, que já vem no JDK (nenhuma biblioteca externa). O grafo é desenhado na tela com layout automático: as pessoas se repelem e os amigos se atraem. A janela tem duas abas: **Explorar** e **Algoritmos**.
+
+### Aba "Explorar"
+
+**Seleção com o mouse**
+
+- **Clique numa pessoa:** destaca os amigos e mostra as sugestões de amizade (linhas tracejadas), além da proximidade e da intermediação dela.
+- **Clique em uma segunda pessoa:** destaca o menor caminho (BFS) em dourado e mostra os graus de separação e os amigos em comum.
+- **Clique de novo na mesma pessoa** desmarca; **clique no espaço vazio** limpa a seleção; com duas pessoas já selecionadas, **um novo clique** começa uma seleção nova.
 - **Arraste** as bolinhas para reorganizar. O tamanho de cada uma é o grau (número de amigos), que também aparece dentro dela.
-- **Cores:** cada grupo isolado (componente conexo) tem uma cor. Remover o Silas faz o grupo A se dividir em dois, e dá para ver a mudança na hora.
-- O painel lateral tem adicionar e remover pessoas, conectar e desconectar amigos, e as consultas (mais popular, círculos sociais, grupos isolados, lista e matriz).
+- **Cores:** por padrão, cada grupo isolado (componente conexo) tem uma cor.
+
+**Painel lateral**
+
+| Cartão | Botão | O que precisa estar selecionado |
+|---|---|---|
+| Pessoas | **Adicionar** (ou Enter no campo de nome). A pessoa nova já fica selecionada, pronta para ser conectada. | Nada |
+| Pessoas | **Remover pessoa selecionada** | Uma pessoa |
+| Amizades | **Conectar** / **Desconectar** | Duas pessoas |
+| Consultas | **Mais popular** (marca com um halo dourado quem tem maior grau) | Nada |
+| Consultas | **Círculos sociais** | Uma pessoa |
+| Consultas | **Grupos isolados** | Nada |
+| Consultas | **Lista e matriz** (abre uma janela com as duas representações) | Nada |
+| Colorir por | Grupos, Grau, Proximidade, Intermediação (ver abaixo) | Nada |
+| (rodapé) | **Reiniciar com dados de exemplo**: descarta as mudanças e volta à rede inicial | Nada |
+
+Quando remover uma pessoa, conectar ou desconectar muda o número de grupos isolados, o painel de resultado avisa.
 
 #### Colorir por centralidade
 
-Na aba Explorar, o cartão **Colorir por** muda o que a cor das bolinhas representa. Cor fria é o menor valor e cor quente é o maior, com uma barra de legenda embaixo e o ranking no painel de resultado:
+O cartão **Colorir por** muda o que a cor das bolinhas representa. Cor fria é o menor valor e cor quente é o maior, com uma barra de legenda embaixo e o ranking no painel de resultado:
 
 | Modo | O que mede | Como é calculado |
 |---|---|---|
@@ -37,11 +70,17 @@ Na aba Explorar, o cartão **Colorir por** muda o que a cor das bolinhas represe
 | **Proximidade** | Quão perto a pessoa está de todas as que alcança | Uma BFS por pessoa, O(V·(V+E)) |
 | **Intermediação** | Em quantos menores caminhos entre outras pessoas ela aparece (ponte da rede) | Algoritmo de Brandes, uma BFS por pessoa, O(V·(V+E)) |
 
-No exemplo, o Silas lidera a intermediação (9,5), seguido do Ismael (8,0), que tem só 2 amigos: o que importa é ligar partes da rede, não ter muitos amigos. Ao clicar numa pessoa, a proximidade e a intermediação dela também aparecem no painel.
+- **Proximidade** vai de 0 a 1 (perto de 1 = chega em todo mundo em poucos saltos). É calculada como `(alcançadas / soma das distâncias) × (alcançadas / (V − 1))`: o segundo fator é a correção de Wasserman e Faust, que desconta quem só alcança parte da rede (aqui a rede tem dois grupos, então ninguém alcança todos).
+- **Intermediação** é o valor bruto, sem normalização: a soma, para cada par de outras pessoas, da fração dos menores caminhos entre elas que passa pela pessoa. Como o grafo não é direcionado, cada par é contado uma vez só.
 
-#### Aba "Algoritmos": o algoritmo passo a passo
+No exemplo, o Silas lidera a intermediação (9,5), seguido do Ismael (8,0), que tem só 2 amigos: o que importa é ligar partes da rede, não ter muitos amigos. Na proximidade, a ordem é Silas (0,36), Ismael (0,33) e Gabriel Siqueira (0,29).
 
-Mostra **como** cada algoritmo pensa, não só o resultado. Escolha o algoritmo, clique numa pessoa para ser o início (BFS e DFS) e use Play, voltar ou próximo passo:
+### Aba "Algoritmos": o algoritmo passo a passo
+
+Mostra **como** cada algoritmo pensa, não só o resultado. Escolha o algoritmo, clique numa pessoa para ser o início (BFS e DFS) e use os controles:
+
+- **Voltar ao começo**, **voltar um passo**, **Play/Pausa** e **próximo passo**. Dar Play depois do último passo recomeça do início.
+- **Velocidade:** controle deslizante com 5 níveis, de 1,8 s a 0,22 s por passo (o padrão é 0,8 s).
 
 | Algoritmo | Estrutura | O que se vê |
 |---|---|---|
@@ -51,9 +90,9 @@ Mostra **como** cada algoritmo pensa, não só o resultado. Escolha o algoritmo,
 
 Em todos há um cartão com a estrutura usada e a complexidade, o **pseudocódigo com a linha em execução destacada** e uma frase explicando cada passo. As cores e anéis têm legenda embaixo do grafo.
 
-Quem gera os passos é a `RedeSocial` (`passosBfs`, `passosDfs`, `passosArticulacao`), que devolve uma lista de "fotografias" do algoritmo. A janela só reproduz essa lista, então a lógica dos algoritmos continua toda em um lugar.
+Quem gera os passos é a `RedeSocial` (`passosBfs`, `passosDfs`, `passosArticulacao`), que devolve uma lista de "fotografias" do algoritmo (o record `Passo`). A janela só reproduz essa lista, então a lógica dos algoritmos continua toda em um lugar.
 
-**Pontos de articulação:** o programa testa uma pessoa por vez (tira, recalcula os grupos e compara), o que custa O(V·(V+E)). O algoritmo de Tarjan faz o mesmo numa única DFS, em O(V+E). Fica como ideia de melhoria.
+**Pontos de articulação:** são as pessoas que, se saírem, deixam a rede com mais grupos. Na rede de exemplo são **Benks, Gabriel Siqueira, Ismael, Silas e Wilson**. O programa testa uma pessoa por vez (tira, recalcula os grupos e compara), o que custa O(V·(V+E)). O algoritmo de Tarjan faz o mesmo numa única DFS, em O(V+E). Fica como ideia de melhoria.
 
 ## Modelagem
 
@@ -84,7 +123,10 @@ Grupo B
      Gabriel Siqueira ---- Wilson ---- Wallace
 ```
 
-Lista de ligações do grupo A: Felipe–Gabriel Xavier, Felipe–Silas, Felipe–Helder, Gabriel Xavier–Silas, Silas–Helder, Silas–Ismael, Ismael–Benks, Benks–Joao Paulo.
+Lista de ligações:
+
+- **Grupo A:** Felipe–Gabriel Xavier, Felipe–Silas, Felipe–Helder, Gabriel Xavier–Silas, Silas–Helder, Silas–Ismael, Ismael–Benks, Benks–Joao Paulo.
+- **Grupo B:** Leonam–Fabricio, Leonam–Gabriel Siqueira, Fabricio–Gabriel Siqueira, Gabriel Siqueira–Wilson, Wilson–Wallace.
 
 ## Estrutura de dados
 
@@ -104,21 +146,36 @@ Numa rede social cada pessoa conhece só uma pequena parte do total, então a li
 
 ## Funcionalidades
 
-| Opção | Função | Técnica | Complexidade |
-|---|---|---|---|
-| 1 a 4 | Adicionar e remover pessoas e amizades | Operações em `Map` e `Set` | O(log V) (remover pessoa: O(grau)) |
-| 5 | Listar amigos e grau | Tamanho do conjunto de adjacência | O(1) |
-| 6 | Amigos em comum | Interseção de dois conjuntos | O(grau) |
-| 7 | Sugestão de amigos | Amigos de amigos, contados e ordenados por amigos em comum | O(Σ graus) |
-| 8 | Graus de separação | **BFS** com mapa de pais | O(V + E) |
-| 9 | Círculos sociais | **BFS por níveis** | O(V + E) |
-| 10 | Grupos isolados | **DFS** (componentes conexos) | O(V + E) |
-| 11 | Mais popular | Maior grau (lista todos em caso de empate) | O(V) |
-| 12 | Lista e matriz de adjacência | Percorre o grafo | O(V²) |
-| (janela) | Pontos de articulação | Tira cada pessoa e recontagem de grupos | O(V·(V+E)) |
-| (janela) | Proximidade e intermediação | Uma BFS por pessoa (Brandes para a intermediação) | O(V·(V+E)) |
+| Opção | Função | Método em `RedeSocial` | Técnica | Complexidade |
+|---|---|---|---|---|
+| 1 a 4 | Adicionar e remover pessoas e amizades | `addPessoa`, `removePessoa`, `addAmizade`, `removeAmizade` | Operações em `Map` e `Set` | Adicionar pessoa: O(log V). Amizade: O(log grau). Remover pessoa: O(log V + grau · log V) |
+| 5 | Listar amigos e grau | `amigos`, `grau` | Tamanho do conjunto de adjacência | Grau: O(1). Listar os amigos: O(grau) |
+| 6 | Amigos em comum | `amigosEmComum` | Interseção de dois conjuntos | O(grau · log grau) |
+| 7 | Sugestão de amigos | `sugestoes` | Amigos de amigos, contados e ordenados por amigos em comum (empate: ordem alfabética) | O(S · log grau + k · log k), com S = soma dos graus dos amigos e k = número de sugestões |
+| 8 | Graus de separação | `caminho` | **BFS** com mapa de pais | O(V + E) |
+| 9 | Círculos sociais | `circulos` | **BFS por níveis** | O(V log V + E): o V log V vem de ordenar cada nível |
+| 10 | Grupos isolados | `grupos` | **DFS** (componentes conexos) | O(V log V + E): cada grupo é um `TreeSet` ordenado |
+| 11 | Mais popular | `maisPopulares` | Maior grau (lista todos em caso de empate) | O(V) |
+| 12 | Lista e matriz de adjacência | `listaAdjacencia`, `matrizAdjacencia` | Percorre o grafo | O(V² · log V): a matriz consulta o `TreeSet` em cada uma das V² células |
+| 0 | Sair | — | — | — |
+| (janela) | Pontos de articulação | `passosArticulacao` | Tira cada pessoa e reconta os grupos | O(V·(V+E)) |
+| (janela) | Proximidade e intermediação | `proximidade`, `intermediacao` | Uma BFS por pessoa (Brandes para a intermediação) | O(V·(V+E)) |
 
-Os nomes são normalizados na entrada: `joao  paulo` e `Joao Paulo` são a mesma pessoa.
+**Sobre as complexidades:** seguindo a convenção dos livros, as contas acima tratam *achar uma pessoa* no `TreeMap` (`adj.get(p)`) como O(1). Na verdade essa busca custa O(log V), então o custo real ganha um fator log V a cada acesso. A BFS do `caminho`, por exemplo, fica O(V log V + E). Com `HashMap` e `HashSet` o acesso seria O(1) em média e os valores bateriam com os dos livros, mas a ordem alfabética das listas, dos rankings e da animação se perderia. Com 12 pessoas a diferença não aparece na prática.
+
+A DFS de `grupos()` é **iterativa**, com uma pilha explícita (`ArrayDeque`) em vez de recursão, então não estoura a pilha de chamadas do Java mesmo em redes grandes.
+
+### Comportamento da `RedeSocial`
+
+- **Operações de cadastro** (`addPessoa`, `removePessoa`, `addAmizade`, `removeAmizade`) devolvem `boolean`: `false` quando não há o que fazer (nome vazio ou repetido, pessoa inexistente, amizade já existente ou com a própria pessoa).
+- **Consultas** (`amigos`, `grau`, `amigosEmComum`, `sugestoes`, `caminho`, `circulos`, `passosBfs`, `passosDfs`) lançam `IllegalArgumentException` se a pessoa não existir. O `Main` e a `Janela` verificam com `existe` antes de chamar.
+- **`caminho`** devolve uma lista vazia quando não há ligação entre as duas pessoas.
+
+### Normalização de nomes
+
+Os nomes são normalizados na entrada (`RedeSocial.normaliza`): tira espaços extras e deixa cada palavra com a inicial maiúscula e o resto minúsculo. Assim, `joao  paulo`, `JOAO PAULO` e `Joao Paulo` são a mesma pessoa.
+
+Limites: a normalização não mexe em acentos, então `João` e `Joao` são pessoas **diferentes**; e nomes com maiúscula no meio perdem o formato (`McDonald` vira `Mcdonald`).
 
 ## Exemplo de execução
 
@@ -151,7 +208,7 @@ Opção: 11
 Mais popular: Silas com 4 amigo(s).
 ```
 
-**Dica para a apresentação:** remover o Silas (opção 2) e rodar a opção 10 de novo mostra o grupo A se dividindo em dois, porque ele era o ponto de ligação entre eles.
+**Dica para a apresentação:** remover o Silas (opção 2 no terminal, ou "Remover pessoa selecionada" na janela) e consultar os grupos isolados de novo mostra o grupo A se dividindo em dois, porque ele era o ponto de ligação entre eles. Na janela, as cores mudam na hora.
 
 ## Estrutura do projeto
 
